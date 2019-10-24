@@ -1,15 +1,10 @@
 package com.khaled.newsmvi.ui.browsenews.view
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.khaled.newsmvi.R
 import com.khaled.newsmvi.data.models.Article
-import com.squareup.picasso.Callback
-import com.squareup.picasso.Picasso
-
-import kotlinx.android.synthetic.main.item_article.view.*
+import com.khaled.newsmvi.databinding.ItemArticleBinding
 
 class NewsListAdapter : RecyclerView.Adapter<NewsListAdapter.ViewHolder>() {
     private var articlesList = ArrayList<Article?>()
@@ -20,9 +15,9 @@ class NewsListAdapter : RecyclerView.Adapter<NewsListAdapter.ViewHolder>() {
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_article, parent, false)
-        return ViewHolder(view)
+        val inflater = LayoutInflater.from(parent.context)
+        val binding = ItemArticleBinding.inflate(inflater)
+        return ViewHolder(binding)
     }
 
     override fun getItemCount(): Int {
@@ -34,22 +29,10 @@ class NewsListAdapter : RecyclerView.Adapter<NewsListAdapter.ViewHolder>() {
         holder.bind(article)
     }
 
-    inner class ViewHolder(mView: View) : RecyclerView.ViewHolder(mView) {
-        private val mImageView = mView.imageViewPicture
-        private val mTextView = mView.textViewTitle
+    inner class ViewHolder(private val binding: ItemArticleBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(article: Article?) {
-            mTextView.text = article?.title
-            Picasso.get()
-                    .load(article?.urlToImage)
-                    .fit()
-                    .into(mImageView, object : Callback {
-                        override fun onSuccess() {
-                        }
-
-                        override fun onError(e: Exception?) {
-                            mImageView.setImageResource(R.drawable.no_image)
-                        }
-                    })
+            binding.article = article
+            binding.executePendingBindings()
         }
     }
 
