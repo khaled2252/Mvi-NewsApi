@@ -7,5 +7,5 @@ class NewsRepository @Inject constructor() {
     @Inject
     lateinit var apiService: NewsApi
 
-    fun getNewsResult(country : String) = apiService.getNewsList(country)
+    fun getNewsResult(country: String, page: String) = apiService.getNewsList(country = country, page = page)
 }

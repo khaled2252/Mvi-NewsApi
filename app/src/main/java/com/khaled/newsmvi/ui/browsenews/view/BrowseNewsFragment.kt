@@ -23,29 +23,33 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.khaled.newsmvi.R
-import com.khaled.newsmvi.ui.browsenews.mvi.BrowseNewsIntent
-import com.khaled.newsmvi.ui.browsenews.viewmodel.BrowseNewsViewModel
-import com.khaled.newsmvi.ui.browsenews.mvi.BrowseNewsViewState
+import com.khaled.newsmvi.data.models.Article
 import com.khaled.newsmvi.di.helper.Injectable
 import com.khaled.newsmvi.mvibase.MviIntent
 import com.khaled.newsmvi.mvibase.MviView
 import com.khaled.newsmvi.mvibase.MviViewModel
 import com.khaled.newsmvi.mvibase.MviViewState
-import com.khaled.newsmvi.data.models.Article
+import com.khaled.newsmvi.ui.browsenews.mvi.BrowseNewsIntent
+import com.khaled.newsmvi.ui.browsenews.mvi.BrowseNewsViewState
+import com.khaled.newsmvi.ui.browsenews.viewmodel.BrowseNewsViewModel
+import com.khaled.newsmvi.util.EndlessRecyclerViewScrollListener
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.subjects.PublishSubject
 import kotlinx.android.synthetic.main.fragment_news.*
 import javax.inject.Inject
+
 
 /**
  * Main UI for the add task screen. Users can enter a task title and description.
  */
 
 class BrowseNewsFragment : Fragment(), MviView<BrowseNewsIntent, BrowseNewsViewState>, Injectable {
-    // Used to manage the data flow lifecycle and avoid memory leak.
-    private val disposables = CompositeDisposable()
     @Inject
     lateinit var viewModel: BrowseNewsViewModel
+
+    private val disposables = CompositeDisposable()
+    private val loadMoreIntentPublisher = PublishSubject.create<BrowseNewsIntent.LoadMoreIntent>()
 
     override fun onDestroy() {
         super.onDestroy()
@@ -72,8 +76,15 @@ class BrowseNewsFragment : Fragment(), MviView<BrowseNewsIntent, BrowseNewsViewS
     private fun setRecyclerView() {
         val mRecyclerView = this.recyclerViewNews
         mRecyclerView.apply {
-            layoutManager = LinearLayoutManager(this@BrowseNewsFragment.context)
+            val layoutManager = LinearLayoutManager(this@BrowseNewsFragment.context)
+            this.layoutManager = layoutManager
             adapter = NewsListAdapter()
+            val scrollListener = object : EndlessRecyclerViewScrollListener(layoutManager) {
+                override fun onLoadMore(page: Int, totalItemsCount: Int) {
+                    loadMoreIntentPublisher.onNext(BrowseNewsIntent.LoadMoreIntent(page))
+                }
+            }
+            addOnScrollListener(scrollListener)
         }
     }
 
@@ -91,7 +102,7 @@ class BrowseNewsFragment : Fragment(), MviView<BrowseNewsIntent, BrowseNewsViewS
     }
 
     override fun intents(): Observable<BrowseNewsIntent> {
-        return initialIntent()
+        return Observable.merge(initialIntent(),loadMoreIntent())
     }
 
     /**
@@ -102,6 +113,10 @@ class BrowseNewsFragment : Fragment(), MviView<BrowseNewsIntent, BrowseNewsViewS
      */
     private fun initialIntent(): Observable<BrowseNewsIntent> {
         return Observable.just(BrowseNewsIntent.InitialIntent)
+    }
+
+    private fun loadMoreIntent(): Observable<BrowseNewsIntent.LoadMoreIntent> {
+        return loadMoreIntentPublisher
     }
 
     override fun render(state: BrowseNewsViewState) {

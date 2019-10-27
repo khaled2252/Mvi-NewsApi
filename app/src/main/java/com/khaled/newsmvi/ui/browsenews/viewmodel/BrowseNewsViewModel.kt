@@ -101,7 +101,10 @@ class BrowseNewsViewModel @Inject constructor(
     private fun actionFromIntent(intent: BrowseNewsIntent): BrowseNewsAction {
         return when (intent) {
             is BrowseNewsIntent.InitialIntent -> {
-                PopulateNewsAction("eg")
+                PopulateNewsAction("eg","1")
+            }
+            is BrowseNewsIntent.LoadMoreIntent -> {
+                PopulateNewsAction("eg",intent.page.toString())
             }
         }
     }

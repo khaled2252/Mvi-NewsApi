@@ -25,7 +25,7 @@ class BrowseNewsActionProcessorHolder @Inject constructor(
     private val populateTaskProcessor =
             ObservableTransformer<BrowseNewsAction.PopulateNewsAction, BrowseNewsResult.PopulateTaskResult> { actions ->
                 actions.flatMap { action ->
-                    newsRepository.getNewsResult(action.country)
+                    newsRepository.getNewsResult(action.country,action.page)
                             // Transform the Single to an Observable to allow emission of multiple
                             // events down the stream (e.g. the InFlight event)
                             .toObservable()
@@ -66,7 +66,6 @@ class BrowseNewsActionProcessorHolder @Inject constructor(
             ObservableTransformer<BrowseNewsAction, BrowseNewsResult> { actions ->
                 actions.publish { shared ->
 //                    Observable.merge<BrowseNewsResult>(
-                            // Match PopulateTasks to populateTaskProcessor
                             shared.ofType(BrowseNewsAction.PopulateNewsAction::class.java)
                                     .compose(populateTaskProcessor).cast(BrowseNewsResult::class.java)
                             .mergeWith(
